@@ -4,15 +4,8 @@ Plugin Name: LH Login Page
 Plugin URI: http://lhero.org/plugins/lh-login-page/
 Description: HTML5 custom login page via shortcode
 Author: shawfactor
-Version: 1.0
+Version: 1.1
 Author URI: http://shawfactor.com/
-
-== Changelog ==
-
-= 0.01 =
-* Initial release
-
-
 
 License:
 Released under the GPL license
@@ -31,6 +24,8 @@ You should have received a copy of the GNU General Public License along with thi
 
 class LH_login_page_plugin {
 
+var $filename;
+
 var $opt_name = 'lh_login_page-options';
 var $page_id_field = 'lh_login_page-page_id';
 
@@ -46,7 +41,7 @@ function uri_to_array($uri){
 
 
 function plugin_menu() {
-add_options_page('LH Login Page Options', 'LH Login Page', 'manage_options', 'lh-login-page-identifier', array($this,"plugin_options"));
+add_options_page('LH Login Page Options', 'LH Login Page', 'manage_options', $this->filename, array($this,"plugin_options"));
 
 }
 
@@ -114,9 +109,11 @@ $options  = get_option($this->opt_name);
 <form name="lh_login_page-backend_form" method="post" action="">
 <input type="hidden" name="<?php echo $lh_login_page_page_id_hidden_field_name; ?>" value="Y">
 
-<p><?php _e("Login Page Id;", 'menu-test' ); ?> 
+<p><?php _e("Login Page ID;", 'menu-test' ); ?> 
 <input type="number" name="<?php echo $this->page_id_field; ?>" id="<?php echo $this->page_id_field; ?>" value="<?php echo $options[ $this->page_id_field ]; ?>" size="10" />
 </p>
+
+
 
 <p class="submit">
 <input type="submit" name="Submit" class="button-primary" value="<?php esc_attr_e('Save Changes') ?>" />
@@ -382,8 +379,20 @@ wp_redirect( home_url( '/' ) ); exit;
 
 }
 
+// add a settings link next to deactive / edit
+public function add_settings_link( $links, $file ) {
+
+	if( $file == $this->filename ){
+		$links[] = '<a href="'. admin_url( 'options-general.php?page=' ).$this->filename.'">Settings</a>';
+	}
+	return $links;
+}
+
+
 
 function __construct() {
+
+$this->filename = plugin_basename( __FILE__ );
 
 add_action('admin_menu', array($this,"plugin_menu"));
 
@@ -400,6 +409,8 @@ add_filter( 'auth_cookie_expiration', array($this,"extend_cookie_expiration_to_1
 add_action('template_redirect', array($this,"redirect_if_logged_in"));
 
 add_action( 'after_setup_theme', array($this,"login_user"));
+
+add_filter('plugin_action_links', array($this,"add_settings_link"), 10, 2);
 
 }
 
